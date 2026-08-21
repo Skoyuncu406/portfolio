@@ -163,9 +163,7 @@ export default function Navbar({
             SK
           </span>
 
-          <span className="navbar-brand-text">
-            Selçuk Koyuncu
-          </span>
+     
         </button>
 
         {/* =================================================
