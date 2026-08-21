@@ -1,10 +1,13 @@
 "use client";
 
-import Link from "next/link";
-import { useParams, usePathname } from "next/navigation";
 import { useState } from "react";
+import {
+  useParams,
+  usePathname,
+  useRouter,
+} from "next/navigation";
 
-const labels = {
+const translations = {
   tr: {
     home: "Ana Sayfa",
     about: "Hakkımda",
@@ -12,7 +15,15 @@ const labels = {
     projects: "Projeler",
     process: "Süreç",
     contact: "İletişim",
-    lang: "EN",
+
+    navigation: "Navigasyon",
+    language: "Dil",
+
+    openMenu: "Menüyü aç",
+    closeMenu: "Menüyü kapat",
+
+    switchToEnglish: "İngilizceye geç",
+    switchToTurkish: "Türkçeye geç",
   },
 
   en: {
@@ -22,7 +33,15 @@ const labels = {
     projects: "Projects",
     process: "Process",
     contact: "Contact",
-    lang: "TR",
+
+    navigation: "Navigation",
+    language: "Language",
+
+    openMenu: "Open menu",
+    closeMenu: "Close menu",
+
+    switchToEnglish: "Switch to English",
+    switchToTurkish: "Switch to Turkish",
   },
 };
 
@@ -30,22 +49,19 @@ export default function Navbar({
   activeSection,
   setActiveSection,
 }) {
-  const { locale } = useParams();
+  const params = useParams();
   const pathname = usePathname();
+  const router = useRouter();
 
-  const currentLocale = locale === "en" ? "en" : "tr";
-  const targetLocale = currentLocale === "tr" ? "en" : "tr";
+  const locale =
+    params?.locale === "en"
+      ? "en"
+      : "tr";
 
-  const t = labels[currentLocale];
+  const t = translations[locale];
 
-  const [open, setOpen] = useState(false);
-
-  const languageHref = pathname.startsWith(`/${currentLocale}`)
-    ? pathname.replace(
-        `/${currentLocale}`,
-        `/${targetLocale}`
-      )
-    : `/${targetLocale}`;
+  const [menuOpen, setMenuOpen] =
+    useState(false);
 
   const menuItems = [
     {
@@ -74,32 +90,92 @@ export default function Navbar({
     },
   ];
 
-  const handleSectionChange = (id) => {
-    setActiveSection(id);
-    setOpen(false);
+  /* =====================================================
+     SECTION CHANGE
+  ===================================================== */
+
+  const handleSectionChange = (section) => {
+    setActiveSection(section);
+    setMenuOpen(false);
+  };
+
+  /* =====================================================
+     LANGUAGE CHANGE
+  ===================================================== */
+
+  const changeLanguage = (
+    targetLocale
+  ) => {
+    if (targetLocale === locale) {
+      setMenuOpen(false);
+      return;
+    }
+
+    const segments = pathname
+      .split("/")
+      .filter(Boolean);
+
+    /*
+      /tr -> /en
+      /en -> /tr
+
+      Eğer ileride başka path oluşursa da
+      ilk segment locale olarak değiştirilir.
+    */
+
+    if (segments.length === 0) {
+      router.push(
+        `/${targetLocale}`
+      );
+
+      setMenuOpen(false);
+
+      return;
+    }
+
+    segments[0] = targetLocale;
+
+    const newPath =
+      "/" + segments.join("/");
+
+    router.push(newPath);
+
+    setMenuOpen(false);
   };
 
   return (
     <header className="portfolio-navbar">
-      <nav className="flex min-h-[76px] items-center justify-between px-5 md:px-8 lg:px-10">
-        {/* LOGO */}
+      <div className="navbar-inner">
+
+        {/* =================================================
+            BRAND
+        ================================================= */}
+
         <button
           type="button"
           onClick={() =>
             handleSectionChange("home")
           }
-          className="group relative flex items-center"
-          aria-label="Ana sayfa"
+          className="navbar-brand group"
+          aria-label={t.home}
         >
-          <span className="heading-font relative z-10 text-xl font-bold tracking-tight text-[#10213A] transition-all duration-300 group-hover:text-[#C8A45D] md:text-2xl">
+          <span className="navbar-brand-mark">
             SK
           </span>
 
-          <span className="absolute -inset-3 scale-75 rounded-full bg-[#C8A45D]/0 blur-xl transition-all duration-500 group-hover:scale-100 group-hover:bg-[#C8A45D]/15" />
+          <span className="navbar-brand-text">
+            Selçuk Koyuncu
+          </span>
         </button>
 
-        {/* DESKTOP MENU */}
-        <div className="hidden items-center gap-7 lg:flex">
+        {/* =================================================
+            DESKTOP NAVIGATION
+        ================================================= */}
+
+        <nav
+          className="desktop-navigation"
+          aria-label={t.navigation}
+        >
           {menuItems.map((item) => {
             const isActive =
               activeSection === item.id;
@@ -109,115 +185,146 @@ export default function Navbar({
                 key={item.id}
                 type="button"
                 onClick={() =>
-                  handleSectionChange(item.id)
+                  handleSectionChange(
+                    item.id
+                  )
                 }
-                className={`group relative px-1 py-2 text-[12px] font-bold uppercase tracking-[0.13em] transition-all duration-300 ${
+                className={`desktop-nav-link ${
                   isActive
-                    ? "text-[#C8A45D]"
-                    : "text-[#10213A]"
+                    ? "desktop-nav-link-active"
+                    : ""
                 }`}
               >
-                <span
-                  className={`relative z-10 inline-block transition-all duration-300 ${
-                    isActive
-                      ? "-translate-y-[1px]"
-                      : "group-hover:-translate-y-[1px] group-hover:text-[#C8A45D]"
-                  }`}
-                >
+                <span>
                   {item.label}
                 </span>
-
-                {/* HAFİF ALTIN GLOW */}
-                <span className="pointer-events-none absolute inset-x-[-8px] inset-y-1 scale-75 rounded-full bg-[#C8A45D]/0 blur-lg transition-all duration-500 group-hover:scale-100 group-hover:bg-[#C8A45D]/10" />
-
-                {/* ALT ÇİZGİ */}
-                <span
-                  className={`absolute -bottom-[2px] left-1/2 h-[1px] -translate-x-1/2 bg-gradient-to-r from-transparent via-[#C8A45D] to-transparent transition-all duration-300 ${
-                    isActive
-                      ? "w-full opacity-100"
-                      : "w-0 opacity-0 group-hover:w-full group-hover:opacity-100"
-                  }`}
-                />
-
-                {/* AKTİF NOKTA */}
-                <span
-                  className={`absolute -bottom-[7px] left-1/2 h-[3px] w-[3px] -translate-x-1/2 rounded-full bg-[#C8A45D] transition-all duration-300 ${
-                    isActive
-                      ? "scale-100 opacity-100"
-                      : "scale-0 opacity-0"
-                  }`}
-                />
               </button>
             );
           })}
-        </div>
+        </nav>
 
-        {/* DESKTOP LANGUAGE */}
-        <div className="hidden lg:flex">
-          <Link
-            href={languageHref}
-            className="group relative inline-flex h-10 min-w-[48px] items-center justify-center overflow-hidden rounded-full border border-[#10213A]/10 bg-white px-4 text-xs font-bold tracking-[0.13em] text-[#10213A] transition-all duration-300 hover:border-[#C8A45D]/70 hover:text-white"
+        {/* =================================================
+            DESKTOP LANGUAGE
+        ================================================= */}
+
+        <div className="desktop-language-wrapper">
+          <button
+            type="button"
+            onClick={() =>
+              changeLanguage(
+                locale === "tr"
+                  ? "en"
+                  : "tr"
+              )
+            }
+            className="desktop-language"
+            aria-label={
+              locale === "tr"
+                ? t.switchToEnglish
+                : t.switchToTurkish
+            }
           >
-            <span className="relative z-10">
-              {t.lang}
+            <span className="desktop-language-current">
+              {locale.toUpperCase()}
             </span>
 
-            <span className="absolute inset-0 translate-y-full bg-[#C8A45D] transition-transform duration-300 ease-out group-hover:translate-y-0" />
-          </Link>
+            <span className="desktop-language-line" />
+
+            <span className="desktop-language-next">
+              {locale === "tr"
+                ? "EN"
+                : "TR"}
+            </span>
+          </button>
         </div>
 
-        {/* MOBILE BUTTON */}
+        {/* =================================================
+            MOBILE MENU BUTTON
+        ================================================= */}
+
         <button
           type="button"
           onClick={() =>
-            setOpen((current) => !current)
+            setMenuOpen(
+              (current) => !current
+            )
           }
-          aria-label="Menüyü aç/kapat"
-          aria-expanded={open}
-          className="group flex h-11 w-11 items-center justify-center rounded-full border border-[#10213A]/10 bg-white transition-all duration-300 hover:border-[#C8A45D]/60 lg:hidden"
+          className={`mobile-menu-button ${
+            menuOpen
+              ? "mobile-menu-button-open"
+              : ""
+          }`}
+          aria-label={
+            menuOpen
+              ? t.closeMenu
+              : t.openMenu
+          }
+          aria-expanded={menuOpen}
         >
-          <span className="flex flex-col gap-[5px]">
-            <span
-              className={`h-[2px] w-5 rounded-full bg-[#10213A] transition-all duration-300 ${
-                open
-                  ? "translate-y-[7px] rotate-45 bg-[#C8A45D]"
-                  : ""
-              }`}
-            />
+          {/* HAMBURGER / CLOSE */}
 
-            <span
-              className={`h-[2px] w-4 rounded-full bg-[#10213A] transition-all duration-300 ${
-                open
-                  ? "opacity-0"
-                  : "ml-auto"
-              }`}
-            />
+          <span
+            className="mobile-menu-icon"
+            aria-hidden="true"
+          >
+            <span />
+            <span />
+            <span />
+          </span>
 
-            <span
-              className={`h-[2px] w-5 rounded-full bg-[#10213A] transition-all duration-300 ${
-                open
-                  ? "-translate-y-[7px] -rotate-45 bg-[#C8A45D]"
-                  : ""
-              }`}
-            />
+          {/* DIVIDER */}
+
+          <span className="mobile-menu-divider" />
+
+          {/* CURRENT LANGUAGE */}
+
+          <span className="mobile-menu-language">
+            {locale.toUpperCase()}
           </span>
         </button>
-      </nav>
+      </div>
 
-      {/* MOBILE MENU */}
+      {/* ===================================================
+          MOBILE NAVIGATION
+      =================================================== */}
+
       <div
-        className={`grid transition-all duration-300 lg:hidden ${
-          open
-            ? "grid-rows-[1fr] border-t border-[#10213A]/10 opacity-100"
-            : "grid-rows-[0fr] opacity-0"
+        className={`mobile-navigation ${
+          menuOpen
+            ? "mobile-navigation-open"
+            : ""
         }`}
+        aria-hidden={!menuOpen}
       >
-        <div className="overflow-hidden">
-          <div className="bg-white/95 px-5 pb-5 pt-3">
-            <div className="flex flex-col">
-              {menuItems.map((item) => {
+        <div className="mobile-navigation-inner">
+
+          {/* =================================================
+              HEADER
+          ================================================= */}
+
+          <div className="mobile-navigation-header">
+            <span className="mobile-navigation-label">
+              {t.navigation}
+            </span>
+
+            <span className="mobile-navigation-current">
+              {locale.toUpperCase()}
+            </span>
+          </div>
+
+          {/* =================================================
+              LINKS
+          ================================================= */}
+
+          <nav
+            className="mobile-navigation-links"
+            aria-label={t.navigation}
+          >
+            {menuItems.map(
+              (item, index) => {
                 const isActive =
-                  activeSection === item.id;
+                  activeSection ===
+                  item.id;
 
                 return (
                   <button
@@ -228,39 +335,99 @@ export default function Navbar({
                         item.id
                       )
                     }
-                    className={`group relative flex items-center justify-between border-b border-[#10213A]/8 py-4 text-left text-sm font-bold uppercase tracking-[0.12em] transition-colors duration-300 last:border-b-0 ${
+                    tabIndex={
+                      menuOpen ? 0 : -1
+                    }
+                    className={`mobile-nav-link ${
                       isActive
-                        ? "text-[#C8A45D]"
-                        : "text-[#10213A]"
+                        ? "mobile-nav-link-active"
+                        : ""
                     }`}
                   >
-                    <span>
+                    <span className="mobile-nav-number">
+                      {String(
+                        index + 1
+                      ).padStart(
+                        2,
+                        "0"
+                      )}
+                    </span>
+
+                    <span className="mobile-nav-label">
                       {item.label}
                     </span>
 
                     <span
-                      className={`h-1.5 w-1.5 rounded-full transition-all duration-300 ${
-                        isActive
-                          ? "scale-100 bg-[#C8A45D]"
-                          : "scale-0 bg-[#C8A45D]/0 group-hover:scale-100 group-hover:bg-[#C8A45D]"
-                      }`}
-                    />
+                      className="mobile-nav-arrow"
+                      aria-hidden="true"
+                    >
+                      →
+                    </span>
                   </button>
                 );
-              })}
-            </div>
-
-            <Link
-              href={languageHref}
-              onClick={() =>
-                setOpen(false)
               }
-              className="mt-5 flex w-full items-center justify-center rounded-full bg-[#10213A] px-5 py-4 text-sm font-bold text-white transition-colors duration-300 hover:bg-[#C8A45D]"
-            >
-              {currentLocale === "tr"
-                ? "English"
-                : "Türkçe"}
-            </Link>
+            )}
+          </nav>
+
+          {/* =================================================
+              LANGUAGE
+          ================================================= */}
+
+          <div className="mobile-language-area">
+            <span className="mobile-language-title">
+              {t.language}
+            </span>
+
+            <div className="mobile-language-switch">
+
+              {/* TR */}
+
+              <button
+                type="button"
+                onClick={() =>
+                  changeLanguage("tr")
+                }
+                tabIndex={
+                  menuOpen ? 0 : -1
+                }
+                className={`mobile-language-option ${
+                  locale === "tr"
+                    ? "mobile-language-option-active"
+                    : ""
+                }`}
+                aria-label={
+                  t.switchToTurkish
+                }
+              >
+                TR
+              </button>
+
+              <span className="language-slash">
+                /
+              </span>
+
+              {/* EN */}
+
+              <button
+                type="button"
+                onClick={() =>
+                  changeLanguage("en")
+                }
+                tabIndex={
+                  menuOpen ? 0 : -1
+                }
+                className={`mobile-language-option ${
+                  locale === "en"
+                    ? "mobile-language-option-active"
+                    : ""
+                }`}
+                aria-label={
+                  t.switchToEnglish
+                }
+              >
+                EN
+              </button>
+            </div>
           </div>
         </div>
       </div>
