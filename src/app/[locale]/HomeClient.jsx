@@ -87,7 +87,7 @@ const content = {
         {
           title: "E-Ticaret Platformu",
           type: "Web Development",
-          href: "https://professional-e-commerce.vercel.app/",
+          href: "https://premium-erkek.vercel.app/",
         },
         {
           title: "Premium Kurumsal Site",
